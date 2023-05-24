@@ -25,7 +25,11 @@ class MinioClient:
         self.client.fput_object(bucket_name, object_name, file_path)
         
     def list_buckets(self):
-        return self.client.list_buckets()
+        return self.client.list_buckets().name
 
-    def list_objects(self, bucket_name):
-        return self.client.list_objects(Bucket=bucket_name)
+    def list_objects(self, bucket_name, prefix):
+        list = []
+        for obj in self.client.list_objects(bucket_name=bucket_name, prefix=prefix):
+            list.append(obj.object_name)
+        return list
+            
