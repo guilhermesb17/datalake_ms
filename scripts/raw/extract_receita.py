@@ -15,7 +15,7 @@ list_secrets = get_secrets.list_secrets()
 
 # Define as urls a serem utilizadas
 url_download = 'http://www.dados.ms.gov.br/datastore/dump/'
-url = 'http://www.dados.ms.gov.br/dataset/compras'
+url = 'http://www.dados.ms.gov.br/dataset/receitas-mensal'
 
 # Conecta no MinIO
 minio = MinioClient(
@@ -27,8 +27,8 @@ minio = MinioClient(
 minio.connect()
 
 # Consulta no bucket quais arquivos já estão disponíveis
-list_arquivos = minio.list_objects(bucket_name='raw', prefix='compras/')
-arquivos = [item.replace('compras/','').replace('.csv', '') for item in list_arquivos]
+list_arquivos = minio.list_objects(bucket_name='raw', prefix='receitas/')
+arquivos = [item.replace('receitas/','').replace('.csv', '') for item in list_arquivos]
 
 # Obtendo o código HTML para buscar os itens disponíveis
 response = requests.get(url)
@@ -36,7 +36,7 @@ html = response.text
 soup = BeautifulSoup(html, 'html.parser')
 elementos = soup.find_all('li', class_='resource-item')
 data_id_list = [li['data-id'] for li in elementos]
-data_id_list = [item.replace('compras-','') for item in data_id_list]
+data_id_list = [item.replace('receitas-','') for item in data_id_list]
 
 # Criando um dataframe para identificar quais arquivos já foram baixados
 df_status = pd.DataFrame({'data-id': data_id_list})
@@ -50,11 +50,11 @@ lista_download = lista_download['data-id'].values.tolist()
 # Verifica os arquivos já disponíveis no lake e baixa os restantes
 if lista_download is not None:
     for item in lista_download:
-        file = ur.urlretrieve(f'{url_download}compras-{item}', f'.temp/{item}.csv')
-        name = item.replace('compras-', '')
+        file = ur.urlretrieve(f'{url_download}receitas-{item}', f'.temp/{item}.csv')
+        name = item.replace('receitas-', '')
         minio.upload_file(
             bucket_name='raw',
             file_path=f'.temp/{item}.csv',
-            object_name=f'compras/{name}.csv'
+            object_name=f'receitas/{name}.csv'
         )
         os.remove(f'.temp/{item}.csv')
